@@ -200,6 +200,69 @@ SELECT Ten,
 	CHARINDEX(' ',Ten) AS 'CHARINDEX',
 	LEFT(Ten,CHARINDEX(' ',Ten) - 1) AS N'Họ',
 	RIGHT(Ten,LEN(Ten) - CHARINDEX(' ',Ten)) AS N'Tên', -- = Thanh Hiếu
-	LEFT(RIGHT(Ten,LEN(ten) - CHARINDEX(' ',Ten)),CHARINDEX(' ',Ten) - 1))
 FROM @TB_NAMES
 -- Làm thế nào tách nốt phần đệm trong tên thành 1 cột
+-- Cách 1: Về đọc thêm về PARSENAME
+DECLARE @TB_NAMES TABLE(Ten NVARCHAR(MAX))
+INSERT INTO @TB_NAMES
+VALUES(N'Nguyễn Thanh Hiếu'),(N'Võ Hữu Huyên')
+SELECT Ten,
+	LEN(Ten) AS N'Độ dài chuỗi',
+	PARSENAME(REPLACE(Ten,' ','.'),3) AS N'Họ',
+	PARSENAME(REPLACE(Ten,' ','.'),2) AS N'Đệm',
+	PARSENAME(REPLACE(Ten,' ','.'),1) AS N'Tên'
+FROM @TB_NAMES
+-- Cách 2
+DECLARE @TB_NAMES TABLE(Ten NVARCHAR(MAX))
+INSERT INTO @TB_NAMES
+VALUES(N'Nguyễn Thanh Hiếu'),(N'Võ Hữu Huyên')
+SELECT Ten,
+	LEN(Ten) AS N'Độ dài chuỗi',
+	CHARINDEX(' ',Ten) AS 'CHARINDEX',
+	LEFT(Ten,CHARINDEX(' ',Ten) - 1) AS N'Họ',
+	 RTRIM(LTRIM(REPLACE(REPLACE(Ten,SUBSTRING(Ten , 1, CHARINDEX(' ', Ten) - 1),''),REVERSE( LEFT( REVERSE(Ten), CHARINDEX(' ', REVERSE(Ten))-1 ) ),'')))as N'TÊN ĐỆM',
+	RIGHT(Ten,LEN(Ten) - CHARINDEX(' ',Ten)) AS N'Tên' -- = Thanh Hiếu
+FROM @TB_NAMES
+
+-- 2.3 Charindex Trả về vị trí được tìm thấy của một chuỗi trong chuỗi chỉ định, 
+-- ngoài ra có thể kiểm tra từ vị trí mong  muốn
+-- CHARINDEX ( string1, string2 ,[  start_location ] ) = 1 số nguyên
+SELECT CHARINDEX(N'TR',N'PHÁT TRIỂN PHẦN MỀM')-- =?
+SELECT CHARINDEX(N'TR',N'PHÁT TRIỂN PHẦN MỀM',7)--?
+
+-- 2.4 Substring Cắt chuỗi bắt đầu từ vị trí và độ dài muốn lấy 
+-- SUBSTRING(string,start,length)
+SELECT SUBSTRING('FPT PTPMPOLY',5,LEN('FPT PTPMPOLY'))--PTPMPOLY
+SELECT SUBSTRING('FPT PTPMPOLY',5,4)
+
+-- 2.5 Replace Hàm thay thế chuỗi theo giá trị cần thay thế và cần thay thế
+-- REPLACE(search,find,replace)
+SELECT REPLACE('0912-456-789','-','.')
+
+/* 2.6 
+REVERSE(string) Đảo ngược chuỗi truyền vào
+LOWER(string)	Biến tất cả chuỗi truyền vào thành chữ thường
+UPPER(string)	Biến tất cả chuỗi truyền vào thành chữ hoa
+SPACE(integer)	Đếm số lượng khoảng trắng trong chuỗi. 
+*/
+SELECT REVERSE('SQL')
+SELECT 'SQ' + '           ' +'L'
+SELECT 'SQ' + SPACE(20) +'L'
+
+-- 2.7 Các hàm ngày tháng năm
+SELECT GETDATE()
+SELECT CONVERT(DATE,GETDATE())
+SELECT CONVERT(TIME,GETDATE())
+
+SELECT YEAR(GETDATE()) AS YEAR,
+	MONTH(GETDATE()) AS MONTH,
+	DAY(GETDATE()) AS DAY
+
+-- DATENAME: truy cập tới các thành phần liên quan ngày tháng
+SELECT 
+	DATENAME(YEAR,GETDATE()) AS YEAR,
+	DATENAME(MONTH,GETDATE()) AS MONTH,
+	DATENAME(DAY,GETDATE()) AS DAY,
+	DATENAME(WEEK,GETDATE()) AS WEEK,
+	DATENAME(DAYOFYEAR,GETDATE()) AS DAYOFYEAR,
+	DATENAME(WEEKDAY,GETDATE()) AS WEEKDAY
