@@ -265,4 +265,117 @@ SELECT
 	DATENAME(DAY,GETDATE()) AS DAY,
 	DATENAME(WEEK,GETDATE()) AS WEEK,
 	DATENAME(DAYOFYEAR,GETDATE()) AS DAYOFYEAR,
-	DATENAME(WEEKDAY,GETDATE()) AS WEEKDAY
+	DATENAME(WEEKDAY,GETDATE()) AS WEEKDAY 
+-- 2.8 Câu điều kiện IF ELSE trong SQL
+/* Lệnh if sẽ kiểm tra một biểu thức có đúng  hay không, nếu đúng thì thực thi nội dung bên trong của IF, nếu sai thì bỏ qua.
+IF BIỂU THỨC   
+BEGIN
+    { statement_block }
+END		  */
+IF 1 = 1
+BEGIN
+	PRINT N'Đúng'
+END
+ELSE 
+BEGIN
+	PRINT N'SAI'
+END
+
+IF 1 = 1
+	PRINT N'Đúng'
+ELSE 
+	PRINT N'SAI'
+-- Ví dụ:
+DECLARE @DiemThiCOM2034 FLOAT = 4.9
+IF @DiemThiCOM2034 >=5
+PRINT N'Chúc mừng bạn đã qua môn'
+ELSE
+PRINT N'Chúc mừng bạn đã mất 700k'
+
+/* 2.9 IF EXISTS
+IF EXISTS (CaulenhSELECT)
+Cau_lenhl | Khoi_lenhl
+[ELSE
+Cau_lenh2 | Khoi_lenh2] 
+*/
+IF EXISTS(SELECT * FROM ChiTietSP WHERE GiaNhap > 4000000)
+	BEGIN
+	SELECT * FROM ChiTietSP WHERE GiaNhap > 4000000
+	PRINT N'Có tìm thầy bản ghi các sản phẩm lớn hơn 40tr'
+	END
+ELSE
+	BEGIN
+	PRINT N'Không Có tìm thầy bản ghi các sản phẩm lớn hơn 40tr'
+	END
+/*
+ 3.0 Hàm IIF () trả về một giá trị nếu một điều kiện là TRUE hoặc một giá trị khác nếu một điều kiện là FALSE.
+IIF(condition, value_if_true, value_if_false)
+*/
+SELECT IIF(5>9,N'Đúng',N'Sai')
+
+SELECT Ma,Ten,IdCH,
+	IIF(IdCH=1,N'Cửa Hàng 1',IIF(IdCH=2,N'Cửa Hàng 2',N'Không xác định'))
+FROM NhanVien
+
+/*
+3.1 Câu lệnh CASE đi qua các điều kiện và trả về một giá trị khi điều kiện đầu tiên được đáp ứng (như câu lệnh IF-THEN-ELSE). 
+Vì vậy, một khi một điều kiện là đúng, nó sẽ ngừng đọc và trả về kết quả. 
+Nếu không có điều kiện nào đúng, nó sẽ trả về giá trị trong mệnh đề ELSE.
+Nếu không có phần ELSE và không có điều kiện nào đúng, nó sẽ trả về NULL.
+CASE
+    WHEN condition1 THEN result1
+    WHEN condition2 THEN result2
+    WHEN conditionN THEN resultN
+    ELSE result
+END;
+*/
+SELECT Ma,
+	Ten = (
+	CASE GioiTinh
+		WHEN 'Nam' THEN 'Anh. ' + Ten
+		WHEN N'Nữ' THEN N'Chị. ' + Ten
+		ELSE 'N/A. ' + Ten
+	END
+	),
+	GioiTinh
+FROM NhanVien
+-- Bài tập tạo 1 biến bảng TB_LUONGNV gồm 2 cột MÃ NV và LƯƠNG. Sau đó truy vấn vào biến bảng hiển thị cột tính thuế thu nhập cá nhân theo các điều kiện sau. 1tr đến 15tr thuế thu nhập là 10%, 16tr đến 25tr là 15%, 26tr => 40tr là 20% và trên 41tr 25%. Ứng dụng CASE WHEN THEN .
+DECLARE @TB_LUONGNV TABLE(MANV VARCHAR(MAX),LUONG FLOAT)
+INSERT INTO @TB_LUONGNV VALUES('DUNGNA',14000000),('TIENH',30000000)
+SELECT MANV,LUONG,
+		(CASE 
+			WHEN LUONG >=1000000 AND LUONG < 16000000 THEN LUONG - (LUONG*0.1)
+			WHEN LUONG >=1600000 AND LUONG < 26000000 THEN LUONG - (LUONG*0.15)
+			WHEN LUONG >=26000000 AND LUONG < 41000000 THEN LUONG - (LUONG*0.2)
+			ELSE LUONG - (LUONG*0.25)
+		END) AS N'TIỀN NHẬN SAU THUẾ'
+FROM @TB_LUONGNV
+/*Vòng lặp WHILE (WHILE LOOP) được sử dụng nếu bạn muốn 
+chạy lặp đi lặp lại một đoạn mã khi điều kiện cho trước trả về giá trị là TRUE.*/
+/*
+	Làm chủ được vòng lặp:
+		1. Điểm bắt đầu
+		2. Điều kiện ngắt vòng lặp
+		3. Bước nhẩy
+*/
+DECLARE @I INT = 0
+WHILE @I < 5
+BEGIN
+	PRINT N'LẦN CHẠY THỨ' + CONVERT(VARCHAR(MAX),@I)
+	PRINT N'MUỐN QUA MÔN COM2034 THÌ PHẢI CHỊU KHÓ CODE'
+	SET @I += 1
+END
+/*Lệnh Break (Ngắt vòng lặp)*/
+/* Lệnh Continue: Thực hiện bước lặp tiếp theo bỏ qua các lệnh trong */
+DECLARE @I INT = 0
+WHILE @I < 10
+BEGIN
+	IF @I = 5
+		BEGIN
+			SET @I += 1
+			CONTINUE
+		END
+	PRINT N'LẦN CHẠY THỨ' + CONVERT(VARCHAR(MAX),@I)
+	PRINT N'MUỐN QUA MÔN COM2034 THÌ PHẢI CHỊU KHÓ CODE'
+	SET @I += 1
+END
