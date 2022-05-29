@@ -379,3 +379,129 @@ BEGIN
 	PRINT N'MUỐN QUA MÔN COM2034 THÌ PHẢI CHỊU KHÓ CODE'
 	SET @I += 1
 END
+
+/* 3.2 Try...Catch 
+SQLServer Transact-SQL cung cấp cơ chế kiểm soát lỗi bằng TRY … CATCH
+như trong các ngôn ngữ lập trình phổ dụng hiện nay (Java, C, PHP, C#).
+Một số hàm ERROR thường dùng
+_
+ERROR_NUMBER() : Trả về mã số của lỗi dưới dạng số
+ERROR_MESSAGE() Trả lại thông báo lỗi dưới hình thức văn bản 
+ERROR_SEVERITY() Trả lại mức độ nghiêm trọng của lỗi kiểu int
+ERROR_STATE() Trả lại trạng thái của lỗi dưới dạng số
+ERROR_LINE() : Trả lại vị trí dòng lệnh đã phát sinh ra lỗi
+ERROR_PROCEDURE() Trả về tên thủ tục/Trigger gây ra lỗi
+*/
+
+BEGIN TRY
+	SELECT '1a' + 1
+END TRY
+BEGIN CATCH
+	SELECT
+	ERROR_NUMBER() AS N'Trả về mã số của lỗi dưới dạng số',
+	ERROR_MESSAGE() AS N'Trả lại thông báo lỗi dưới hình thức văn bản' 
+END CATCH
+
+-- Ví dụ 2:
+BEGIN TRY
+	INSERT INTO MauSac VALUES('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa','a')
+END TRY
+BEGIN CATCH
+	PRINT N'Bạn ơi lỗi rồi'
+	PRINT N'Thông báo: ' + CONVERT(VARCHAR(MAX),ERROR_NUMBER())
+	PRINT N'Thông báo: ' + ERROR_MESSAGE()
+END CATCH
+/* 3.3 RAISERROR - Được sử dụng để tạo nội dung như LỖI để trả về cho ứng dụng.
+*/
+BEGIN TRY
+	INSERT INTO MauSac VALUES('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa','a')
+END TRY
+BEGIN CATCH
+	DECLARE @erERROR_SEVERITY INT,@erERROR_MESSAGE VARCHAR(MAX), @erERROR_STATE INT
+	SELECT
+		@erERROR_SEVERITY = ERROR_SEVERITY(),
+		@erERROR_MESSAGE = ERROR_MESSAGE(),
+		@erERROR_STATE = ERROR_STATE()
+	RAISERROR(@erERROR_MESSAGE,@erERROR_SEVERITY,@erERROR_STATE)
+END CATCH
+-- 3.4 Ý nghĩa của Replicate
+DECLARE @ten1234 NVARCHAR(50)
+SET @ten1234 = REPLICATE(N'Á',5)--Lặp lại số lần với String truyền vào
+PRINT @ten1234
+
+/* TỔNG KẾT STORE PROCEDURE :
+ -- Là lưu trữ một tập hợp các câu lệnh đi kèm trong CSDL cho phép tái sử dụng khi cần
+ -- Hỗ trợ các ứng dụng tương tác nhanh và chính xác
+ -- Cho phép thực thi nhanh hơn cách viết từng câu lệnh SQL
+ -- Stored procedure có thể làm giảm bớt vấn đề kẹt đường truyền mạng, dữ liệu được gởi theo gói.
+ -- Stored procedure có thể sử dụng trong vấn đề bảo mật, phân quyền
+ -- Có 2 loại Store Procedure chính: System stored	procedures và User stored procedures   
+ 
+ -- Cấu trúc của Store Procedure bao hồm:
+	➢Inputs: nhận các tham số đầu vào khi cần
+	➢Execution: kết hợp giữa các yêu cầu nghiệp vụ với các lệnh
+	lập trình như IF..ELSE, WHILE...
+	➢Outputs: trả ra các đơn giá trị (số, chuỗi…) hoặc một tập kết quả.
+ 
+ --Cú pháp:
+ CREATE hoặc ALTER(Để cập nhật nếu đã tồn tại tên SP) PROC <Tên STORE PROCEDURE> <Tham số truyền vào nếu có>
+ AS
+ BEGIN
+  <BODY CODE>
+ END
+ ĐỂ GỌI SP dùng EXEC hoặc EXECUTE
+SPs chia làm 2 loại:
+System stored procedures: Thủ tục mà những người sử dụng chỉ có quyền thực hiện, không được phép thay đổi.	
+User stored procedures: Thủ tục do người sử dụng tạo và thực hiện.
+ -- SYSTEM STORED PROCEDURES
+ Là những stored procedure chứa trong Master Database, thường bắt đầu bằng tiếp đầu ngữ	 sp_
+ Chủ yếu dùng trong việc quản lý cơ sở dữ liệu(administration) và bảo mật (security).
+❑Ví dụ: sp_helptext <tên của đối tượng> : để lấy định nghĩa của đối tượng (thông số tên đối
+tượng truyền vào) trong Database
+ */
+
+ -- Ví dụ 1: Đơn giản
+ GO
+ CREATE PROCEDURE SP_DsNhanVienNamCH
+ AS
+ SELECT * FROM NhanVien WHERE GioiTinh = 'NAM'
+
+ -- CREATE DROP ALTER
+ GO
+ ALTER PROC SP_DSNhanVienNuCH1
+ AS
+  SELECT * FROM NhanVien WHERE GioiTinh = N'Nữ' AND IdCH = (SELECT Id FROM CuaHang WHERE Ma = 'CH1')
+
+-- Gọi STORE PROC thì cần biết tên và nhiệm vụ của store proc
+EXECUTE SP_DsNhanVienNamCH
+EXEC SP_DSNhanVienNuCH1
+
+-- Tạo 1 STORE giúp thực hiện CRUD 1 BẢNG NSX
+GO
+CREATE PROC SP_CRUD_TABLE_NSX
+			(@ID INT,@Ma VARCHAR(20),
+			@Ten NVARCHAR(30),@SQL_Type VARCHAR(10))
+AS
+BEGIN
+	IF @SQL_Type = 'SELECT'
+	BEGIN
+		SELECT * FROM NSX
+	END
+	IF @SQL_Type = 'INSERT'
+	BEGIN
+		INSERT INTO NSX VALUES(@Ma,@Ten)
+	END
+	IF @SQL_Type = 'DELETE'
+	BEGIN
+		DELETE FROM NSX WHERE Id = @ID
+	END
+	IF @SQL_Type = 'UPDATE'
+	BEGIN
+		UPDATE NSX SET
+		Ma = @Ma, Ten = @Ten
+		WHERE Id = @ID
+	END
+END
+
+EXEC SP_CRUD_TABLE_NSX @ID = 0,@Ma = '',@Ten = '',@SQL_Type = 'SELECT'
+EXEC SP_CRUD_TABLE_NSX @ID = 0,@Ma = 'Dungna33',@Ten = 'Dungna33',@SQL_Type = 'INSERT'
