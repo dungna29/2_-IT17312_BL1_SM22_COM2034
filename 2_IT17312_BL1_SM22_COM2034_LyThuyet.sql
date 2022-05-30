@@ -505,3 +505,45 @@ END
 
 EXEC SP_CRUD_TABLE_NSX @ID = 0,@Ma = '',@Ten = '',@SQL_Type = 'SELECT'
 EXEC SP_CRUD_TABLE_NSX @ID = 0,@Ma = 'Dungna33',@Ten = 'Dungna33',@SQL_Type = 'INSERT'
+
+ -- Bài Tập Viết STORE PROC CRUD BẢNG NHÂN VIÊN Không truyền khóa phụ mà là truyền mã MÃ CỬA HÀNG, MÃ CHỨC VỤ, Mã Người Gửi Báo. CÒN CÁC THAM SỐ HỢP LÝ.
+ -- Thực thi đủ 4 câu CRUD thành công.
+ -- 5h30 Sau đó gọi random code lại trên máy chiếu
+
+GO
+CREATE PROC SP_CRUD_NHANVIEN
+(@ID INT, @MA VARCHAR(20),@TEN VARCHAR(30),@TENDEM NVARCHAR(30),
+@HO NVARCHAR(30),@GIOITINH NVARCHAR(10),@NGAYSINH DATE,
+@DIACHI NVARCHAR(100),@SDT NVARCHAR(30), @MACH VARCHAR(20),
+@MACV VARCHAR(20), @MAGUIBC VARCHAR(20),@TRANGTHAI INT,@SQL_TYPE VARCHAR(10))
+AS
+BEGIN
+    BEGIN
+    DECLARE @IDCH INT,@IDCV INT,@IDGUIBC INT
+    SET @IDCH = (SELECT TOP 1 ID FROM CUAHANG WHERE MA = @MACH)
+    SET @IDCV = (SELECT TOP 1 ID FROM CHUCVU WHERE MA = @MACV)
+    SET @IDGUIBC = (SELECT TOP 1 ID FROM NHANVIEN WHERE MA = @MAGUIBC)
+    END
+    IF @SQL_TYPE = 'SELECT'
+    BEGIN
+        SELECT *, CUAHANG.MA,CHUCVU.TEN
+        FROM NHANVIEN JOIN CUAHANG ON NHANVIEN.IDCH = CUAHANG.ID
+                        JOIN CHUCVU ON NHANVIEN.IDCV = CHUCVU.ID
+    END
+    IF @SQL_TYPE = 'INSERT'
+    BEGIN
+        INSERT INTO NHANVIEN VALUES (@MA,@TEN,@TENDEM,@HO,
+        @GIOITINH,@NGAYSINH,@DIACHI,@SDT,@IDCH,@IDCV,@IDGUIBC,
+        @TRANGTHAI)
+    END
+END
+
+EXEC SP_Crud_NhanVien @id = 0, @Ma = '11',@Ten = 'ABC',@TenDem = 'VAN',
+@Ho = 'Nguyen',@GioiTinh = 'Nam',@NgaySinh ='01/01/2003',
+@DiaChi = 'BG',@Sdt = '0123456789', @MaCH ='CH3',
+@MaCV = 'CT', @MaGuiBC = 'NV10',@TrangThai =1,@SQL_Type = 'INSERT'
+
+EXEC SP_Crud_NhanVien @id = 0, @Ma = '11',@Ten = 'ABC',@TenDem = 'VAN',
+@Ho = 'Nguyen',@GioiTinh = 'Nam',@NgaySinh ='01/01/2003',
+@DiaChi = 'BG',@Sdt = '0123456789', @MaCH ='CH3',
+@MaCV = 'CT', @MaGuiBC = 'NV10',@TrangThai =1,@SQL_Type = 'SELECT'
